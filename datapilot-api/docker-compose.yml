@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: datapilot-postgres
+    environment:
+      POSTGRES_DB: datapilot
+      POSTGRES_USER: datapilot
+      POSTGRES_PASSWORD: datapilot
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  datapilot-api:
+    build: .
+    container_name: datapilot-api
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/datapilot
+      SPRING_DATASOURCE_USERNAME: datapilot
+      SPRING_DATASOURCE_PASSWORD: datapilot
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:

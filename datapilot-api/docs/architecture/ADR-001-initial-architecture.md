@@ -1,0 +1,1 @@
+DataPilot will initially use a modular monolith for the core Java backend. The architecture will maintain clear module boundaries so independently scalable services can be extracted when justified by workload, ownership, or scaling requirements.

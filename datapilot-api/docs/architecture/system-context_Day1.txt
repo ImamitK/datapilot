@@ -1,0 +1,24 @@
+                    ┌─────────────────┐
+                    │     Client      │
+                    │ Postman / UI    │
+                    └────────┬────────┘
+                             │
+                             │ HTTP
+                             ▼
+                    ┌─────────────────┐
+                    │  API Service    │
+                    │ Java 21         │
+                    │ Spring Boot     │
+                    │                 │
+                    │ Controller      │
+                    │ Service         │
+                    │ Repository      │
+                    └────────┬────────┘
+                             │
+                             │ JDBC / JPA
+                             ▼
+                    ┌─────────────────┐
+                    │   PostgreSQL    │
+                    │                 │
+                    │    datasets     │
+                    └─────────────────┘

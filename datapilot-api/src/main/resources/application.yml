@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: datapilot-api
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/datapilot
+    username: postgres
+    password: postgres
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
