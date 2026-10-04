@@ -4,13 +4,14 @@ import com.datapilot.api.dto.DatasetCreateRequest;
 import com.datapilot.api.dto.DatasetResponse;
 import com.datapilot.api.entity.Dataset;
 import com.datapilot.api.entity.DatasetStatus;
+import com.datapilot.api.exception.DatasetAlreadyExistsException;
+import com.datapilot.api.exception.DatasetNotFoundException;
 import com.datapilot.api.repository.DatasetRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -46,12 +47,15 @@ public class DatasetService {
             DTO
     * */
     public DatasetResponse createDataset(DatasetCreateRequest request){
-        Dataset dataset = new Dataset();
+        if(datasetRepository.existsByName(request.getName())){
+            throw new DatasetAlreadyExistsException(
+                    "Dataset already exists: " + request.getName());
+        }
 
+        Dataset dataset = new Dataset();
         dataset.setName(request.getName());
         dataset.setDescription(request.getDescription());
         dataset.setSourceType(request.getSourceType());
-
         dataset.setStatus(DatasetStatus.ACTIVE);
         dataset.setCreatedAt(Instant.now());
         dataset.setUpdatedAt(Instant.now());
@@ -72,10 +76,12 @@ public class DatasetService {
         //        .toList();
     }
 
-    public DatasetResponse getDataById(UUID id) {
+    public DatasetResponse getDatasetById(UUID id) {
         return datasetRepository.findById(id)
                 .map(this::toResponse)
-                .orElseThrow(() -> new RuntimeException("Dataset not found: "+ id));
+                .orElseThrow(() ->
+                        new DatasetNotFoundException(
+                                "Dataset not found: "+ id));
     }
 
     private DatasetResponse toResponse(Dataset dataset) {
@@ -91,5 +97,24 @@ public class DatasetService {
         response.setUpdatedAt(dataset.getUpdatedAt());
 
         return response;
+    }
+
+    public void deleteDataset(UUID id) {
+        /* Validate the entry
+        if(!datasetRepository.existsById(id)){
+            throw new DatasetNotFoundException(
+                    "Dataset not found: " + id);
+        }
+         Delete the entry
+        datasetRepository.deleteById(id);
+        */
+
+        //soft deletion
+        Dataset dataset = datasetRepository.findById(id)
+                .orElseThrow(() ->
+                        new DatasetNotFoundException("Dataset not found: " + id));
+        dataset.setStatus(DatasetStatus.INACTIVE);
+        dataset.setUpdatedAt(Instant.now());
+        datasetRepository.save(dataset);
     }
 }

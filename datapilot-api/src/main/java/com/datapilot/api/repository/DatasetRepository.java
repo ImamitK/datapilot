@@ -28,4 +28,6 @@ JDBC
 PostgreSQL
 * */
 public interface DatasetRepository extends JpaRepository<Dataset, UUID> {
+
+    boolean existsByName(String name);
 }

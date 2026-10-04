@@ -11,9 +11,9 @@ public class Dataset {
 
     @Id
     @GeneratedValue
-    private UUID id;
+    private UUID id;  // Because eventually DataPilot will have distributed components.API instance A → creates dataset and API instance B → creates dataset, we don't want ID generation to depend on a centralized database sequence
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
 
     private String description;

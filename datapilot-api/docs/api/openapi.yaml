@@ -1,0 +1,157 @@
+openapi: 3.0.3
+
+info:
+title: DataPilot API
+description: Enterprise Data Intelligence & RAG Platform API
+version: 1.0.0
+
+servers:
+
+  * url: http://localhost:8080
+
+paths:
+/api/v1/datasets:
+post:
+summary: Create a dataset
+description: Creates a new dataset definition in DataPilot.
+operationId: createDataset
+
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        $ref: '#/components/schemas/DatasetCreateRequest'
+      example:
+        name: customer-data
+        description: Customer master dataset
+        sourceType: CSV
+
+responses:
+  '201':
+    description: Dataset created successfully
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/DatasetResponse'
+        example:
+          id: 8c5f5d2e-0d2e-4a9c-9e5a-3e5e9d6b2c71
+          name: customer-data
+          description: Customer master dataset
+          sourceType: CSV
+          status: ACTIVE
+          createdAt: '2026-10-03T18:00:00Z'
+          updatedAt: '2026-10-03T18:00:00Z'
+
+  '400':
+    description: Invalid request
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/ErrorResponse'
+        examples:
+          missingName:
+            value:
+              timestamp: '2026-10-03T18:00:00Z'
+              status: 400
+              error: Bad Request
+              message: name is required
+              path: /api/v1/datasets
+          invalidSourceType:
+            value:
+              timestamp: '2026-10-03T18:00:00Z'
+              status: 400
+              error: Bad Request
+              message: sourceType must be one of CSV, JSON, DATABASE, API
+              path: /api/v1/datasets
+
+components:
+schemas:
+
+  ```
+DatasetCreateRequest:
+  type: object
+  required:
+    - name
+    - sourceType
+  properties:
+    name:
+      type: string
+      description: Unique logical name of the dataset
+      example: customer-data
+
+    description:
+      type: string
+      description: Human-readable description
+      example: Customer master dataset
+
+    sourceType:
+      type: string
+      description: Source type of the dataset
+      enum:
+        - CSV
+        - JSON
+        - DATABASE
+        - API
+
+DatasetResponse:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Server-generated dataset identifier
+
+    name:
+      type: string
+      example: customer-data
+
+    description:
+      type: string
+      example: Customer master dataset
+
+    sourceType:
+      type: string
+      enum:
+        - CSV
+        - JSON
+        - DATABASE
+        - API
+
+    status:
+      type: string
+      enum:
+        - ACTIVE
+        - INACTIVE
+
+    createdAt:
+      type: string
+      format: date-time
+
+    updatedAt:
+      type: string
+      format: date-time
+
+ErrorResponse:
+  type: object
+  properties:
+    timestamp:
+      type: string
+      format: date-time
+
+    status:
+      type: integer
+      example: 400
+
+    error:
+      type: string
+      example: Bad Request
+
+    message:
+      type: string
+      example: name is required
+
+    path:
+      type: string
+      example: /api/v1/datasets
+

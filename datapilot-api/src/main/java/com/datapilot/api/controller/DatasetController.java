@@ -2,14 +2,12 @@ package com.datapilot.api.controller;
 
 import com.datapilot.api.dto.DatasetCreateRequest;
 import com.datapilot.api.dto.DatasetResponse;
-import com.datapilot.api.entity.Dataset;
-import com.datapilot.api.repository.DatasetRepository;
 import com.datapilot.api.service.DatasetService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -23,7 +21,9 @@ public class DatasetController {
     }
 
     @PostMapping
-    public DatasetResponse createDataset(@RequestBody DatasetCreateRequest request){
+    @ResponseStatus(HttpStatus.CREATED)
+    public DatasetResponse createDataset(
+            @Valid @RequestBody DatasetCreateRequest request){
         return datasetService.createDataset(request);
     }
 
@@ -32,10 +32,15 @@ public class DatasetController {
         return  datasetService.getDataset();
     }
 
-    @GetMapping("{id}")
-    public DatasetResponse getDatasetById(@RequestAttribute UUID uuid){
-        return datasetService.getDataById(uuid);
+    @GetMapping("/{id}")
+    public DatasetResponse getDatasetById(@PathVariable UUID id){
+        return datasetService.getDatasetById(id);
     }
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteDatasetById(@PathVariable UUID id){
+        datasetService.deleteDataset(id);
+    }
 
 }
