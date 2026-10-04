@@ -1,5 +1,7 @@
 # DataPilot
 
+[![DataPilot CI](https://github.com/ImamitK/datapilot/actions/workflows/ci.yml/badge.svg)](https://github.com/ImamitK/datapilot/actions/workflows/ci.yml)
+
 ### Enterprise Data Intelligence & RAG Platform
 
 DataPilot is a production-oriented data platform designed to help engineering and data teams **ingest, understand, validate, monitor, and investigate enterprise data** using modern data engineering and Generative AI techniques.
