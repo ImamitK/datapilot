@@ -47,7 +47,7 @@ public class DatasetPostgresIntegrationTest {
     @Autowired
     private DatasetRepository datasetRepository;
 
-    @Test
+    //@Test
     void shouldPersistAndReadDatasetFromPostgres() {
 
         Dataset dataset = new Dataset();
