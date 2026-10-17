@@ -59,8 +59,7 @@ public class DatasetVersionService {
     public List<DatasetVersionResponse> getAllVersions(UUID datasetId) {
 
         // Does the parent Dataset exist?
-        Dataset dataset = datasetRepository
-                .findById(datasetId)
+        Dataset dataset = datasetRepository.findById(datasetId)
                 .orElseThrow(() ->
                         new DatasetNotFoundException(
                                 "Dataset not found: " + datasetId));

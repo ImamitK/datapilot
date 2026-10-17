@@ -24,4 +24,17 @@ public class GlobalExceptionHandler{
                .status(HttpStatus.CONFLICT)
                .body(body);
    }
+
+   @ExceptionHandler(DatasetNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleDatasetNotFound(DatasetNotFoundException ex){
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(Map.of(
+                        "timestamp", Instant.now(),
+                        "status", 404,
+                        "error",
+                        "Conflict",
+                        "message", ex.getMessage()
+                ));
+   }
 }

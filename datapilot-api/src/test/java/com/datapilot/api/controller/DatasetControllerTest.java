@@ -80,7 +80,7 @@ public final class DatasetControllerTest {
                .andExpect(jsonPath("$[0].sourceType").value("CSV"));
    }
 
-    /*@Test
+    @Test
     void shouldReturn404WhenDatasetDoesNotExist() throws Exception {
 
         UUID id = UUID.randomUUID();
@@ -91,7 +91,7 @@ public final class DatasetControllerTest {
 
         mockMvc.perform(get("/api/v1/datasets/{id}", id))
                 .andExpect(status().isNotFound());
-    }*/
+    }
 
    @Test
     void shouldReturn400ForInvalidRequest() throws Exception{

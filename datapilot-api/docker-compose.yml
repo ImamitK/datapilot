@@ -10,18 +10,24 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U datapilot -d datapilot"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
 
-  datapilot-api:
-    build: .
-    container_name: datapilot-api
-    ports:
-      - "8080:8080"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/datapilot
-      SPRING_DATASOURCE_USERNAME: datapilot
-      SPRING_DATASOURCE_PASSWORD: datapilot
-    depends_on:
-      - postgres
+  #datapilot-api:
+  #  build: .
+  #  container_name: datapilot-api
+  #  ports:
+  #    - "8080:8080"
+  #  environment:
+  #    SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/datapilot
+  #    SPRING_DATASOURCE_USERNAME: datapilot
+  #   SPRING_DATASOURCE_PASSWORD: datapilot
+  #  depends_on:
+  #    - postgres
 
 volumes:
   postgres_data:

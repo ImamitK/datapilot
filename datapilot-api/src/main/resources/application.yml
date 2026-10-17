@@ -6,7 +6,9 @@ spring:
     url: jdbc:postgresql://localhost:5432/datapilot
     username: postgres
     password: postgres
-
+    # For Docker comment above and uncomment below
+    #username: datapilot
+    #password: datapilot
   jpa:
     hibernate:
       ddl-auto: update

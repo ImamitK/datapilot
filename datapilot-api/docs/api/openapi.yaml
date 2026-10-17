@@ -1,157 +1,346 @@
+
 openapi: 3.0.3
 
 info:
-title: DataPilot API
-description: Enterprise Data Intelligence & RAG Platform API
-version: 1.0.0
+  title: DataPilot API
+  description: Enterprise Data Intelligence & RAG Platform API
+  version: 1.0.0
 
 servers:
-
-  * url: http://localhost:8080
+  - url: http://localhost:8080
 
 paths:
-/api/v1/datasets:
-post:
-summary: Create a dataset
-description: Creates a new dataset definition in DataPilot.
-operationId: createDataset
 
-requestBody:
-  required: true
-  content:
-    application/json:
-      schema:
-        $ref: '#/components/schemas/DatasetCreateRequest'
-      example:
-        name: customer-data
-        description: Customer master dataset
-        sourceType: CSV
+  /api/v1/datasets:
+    post:
+      summary: Create a dataset
+      description: Creates a new dataset definition.
+      operationId: createDataset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasetCreateRequest'
+            example:
+              name: customer-data
+              description: Customer master dataset
+              sourceType: CSV
+      responses:
+        '201':
+          description: Dataset created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: A dataset with this name already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-responses:
-  '201':
-    description: Dataset created successfully
-    content:
-      application/json:
+    get:
+      summary: List datasets
+      operationId: getDatasets
+      responses:
+        '200':
+          description: Datasets retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DatasetResponse'
+
+  /api/v1/datasets/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Dataset UUID
         schema:
-          $ref: '#/components/schemas/DatasetResponse'
-        example:
-          id: 8c5f5d2e-0d2e-4a9c-9e5a-3e5e9d6b2c71
-          name: customer-data
-          description: Customer master dataset
-          sourceType: CSV
-          status: ACTIVE
-          createdAt: '2026-10-03T18:00:00Z'
-          updatedAt: '2026-10-03T18:00:00Z'
+          type: string
+          format: uuid
 
-  '400':
-    description: Invalid request
-    content:
-      application/json:
+    get:
+      summary: Get a dataset
+      operationId: getDataset
+      responses:
+        '200':
+          description: Dataset retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetResponse'
+        '404':
+          description: Dataset not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Soft-delete a dataset
+      operationId: deleteDataset
+      description: Marks the dataset as INACTIVE without physically deleting the record.
+      responses:
+        '204':
+          description: Dataset soft-deleted successfully
+        '404':
+          description: Dataset not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/datasets/{datasetId}/versions:
+    parameters:
+      - name: datasetId
+        in: path
+        required: true
+        description: UUID of the parent dataset
         schema:
-          $ref: '#/components/schemas/ErrorResponse'
-        examples:
-          missingName:
-            value:
-              timestamp: '2026-10-03T18:00:00Z'
-              status: 400
-              error: Bad Request
-              message: name is required
-              path: /api/v1/datasets
-          invalidSourceType:
-            value:
-              timestamp: '2026-10-03T18:00:00Z'
-              status: 400
-              error: Bad Request
-              message: sourceType must be one of CSV, JSON, DATABASE, API
-              path: /api/v1/datasets
+          type: string
+          format: uuid
+
+    post:
+      summary: Create a dataset version
+      operationId: createDatasetVersion
+      description: Creates the next version number for an existing dataset.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasetVersionCreateRequest'
+            example:
+              fileName: customers_2026_10_07.csv
+      responses:
+        '201':
+          description: Dataset version created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetVersionResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Parent dataset not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Version number conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      summary: List dataset versions
+      operationId: getAllVersions
+      description: Returns versions ordered from newest to oldest. Returns an empty array when the dataset has no versions.
+      responses:
+        '200':
+          description: Dataset versions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DatasetVersionResponse'
+        '404':
+          description: Parent dataset not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/datasets/{datasetId}/versions/{versionNumber}:
+    parameters:
+      - name: datasetId
+        in: path
+        required: true
+        description: UUID of the parent dataset
+        schema:
+          type: string
+          format: uuid
+      - name: versionNumber
+        in: path
+        required: true
+        description: Version number within the dataset
+        schema:
+          type: integer
+          minimum: 1
+
+    get:
+      summary: Get a specific dataset version
+      operationId: getVersion
+      responses:
+        '200':
+          description: Dataset version retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetVersionResponse'
+        '400':
+          description: Invalid path parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Dataset or version not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
 components:
-schemas:
+  schemas:
 
-  ```
-DatasetCreateRequest:
-  type: object
-  required:
-    - name
-    - sourceType
-  properties:
-    name:
-      type: string
-      description: Unique logical name of the dataset
-      example: customer-data
+    DatasetCreateRequest:
+      type: object
+      required:
+        - name
+        - sourceType
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: '.*\S.*'
+          description: Unique logical name of the dataset
+          example: customer-data
+        description:
+          type: string
+          maxLength: 500
+          nullable: true
+          description: Human-readable description
+          example: Customer master dataset
+        sourceType:
+          type: string
+          enum:
+            - CSV
+            - JSON
+            - DATABASE
+            - API
 
-    description:
-      type: string
-      description: Human-readable description
-      example: Customer master dataset
+    DatasetResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Server-generated dataset identifier
+        name:
+          type: string
+          example: customer-data
+        description:
+          type: string
+          nullable: true
+          example: Customer master dataset
+        sourceType:
+          type: string
+          enum:
+            - CSV
+            - JSON
+            - DATABASE
+            - API
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - INACTIVE
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
 
-    sourceType:
-      type: string
-      description: Source type of the dataset
-      enum:
-        - CSV
-        - JSON
-        - DATABASE
-        - API
+    DatasetVersionCreateRequest:
+      type: object
+      required:
+        - fileName
+      properties:
+        fileName:
+          type: string
+          minLength: 1
+          maxLength: 255
+          pattern: '.*\S.*'
+          description: Name of the uploaded file. Must not be blank.
+          example: customers_2026_10_07.csv
 
-DatasetResponse:
-  type: object
-  properties:
-    id:
-      type: string
-      format: uuid
-      description: Server-generated dataset identifier
+    DatasetVersionResponse:
+      type: object
+      required:
+        - id
+        - datasetId
+        - versionNumber
+        - fileName
+        - status
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        datasetId:
+          type: string
+          format: uuid
+        versionNumber:
+          type: integer
+          minimum: 1
+        fileName:
+          type: string
+          maxLength: 255
+        storageLocation:
+          type: string
+          nullable: true
+          description: Storage URI; null until storage is implemented.
+        rowCount:
+          type: integer
+          format: int64
+          nullable: true
+          description: Row count; null until profiling is implemented.
+        status:
+          type: string
+          enum:
+            - CREATED
+            - PROCESSING
+            - READY
+            - FAILED
+        createdAt:
+          type: string
+          format: date-time
 
-    name:
-      type: string
-      example: customer-data
-
-    description:
-      type: string
-      example: Customer master dataset
-
-    sourceType:
-      type: string
-      enum:
-        - CSV
-        - JSON
-        - DATABASE
-        - API
-
-    status:
-      type: string
-      enum:
-        - ACTIVE
-        - INACTIVE
-
-    createdAt:
-      type: string
-      format: date-time
-
-    updatedAt:
-      type: string
-      format: date-time
-
-ErrorResponse:
-  type: object
-  properties:
-    timestamp:
-      type: string
-      format: date-time
-
-    status:
-      type: integer
-      example: 400
-
-    error:
-      type: string
-      example: Bad Request
-
-    message:
-      type: string
-      example: name is required
-
-    path:
-      type: string
-      example: /api/v1/datasets
-
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+          example: 400
+        error:
+          type: string
+          example: Bad Request
+        message:
+          type: string
+          example: Invalid request
+        path:
+          type: string
+          example: /api/v1/datasets
