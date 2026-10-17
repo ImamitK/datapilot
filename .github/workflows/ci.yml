@@ -15,10 +15,31 @@ jobs:
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
+    
+    env:
+      JAVA_TOOL_OPTIONS: -Duser.timezone=Asia/Kolkata
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/datapilot
+      SPRING_DATASOURCE_USERNAME: datapilot
+      SPRING_DATASOURCE_PASSWORD: datapilot
 
     defaults:
       run:
         working-directory: datapilot-api
+        
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: datapilot
+          POSTGRES_USER: datapilot
+          POSTGRES_PASSWORD: datapilot
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U datapilot -d datapilot"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout repository
@@ -30,6 +51,12 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: maven
+          
+      - name: Show Java and Maven versions
+        run: |
+          java -version
+          mvn -version
 
       - name: Build and test
         run: mvn --batch-mode verify
+    
