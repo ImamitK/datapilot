@@ -1,6 +1,15 @@
+datapilot:
+  storage:
+    directory: ${DATAPILOT_STORAGE_DIR:./datapilot-uploads}
+
 spring:
   application:
     name: datapilot-api
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 
   datasource:
     url: jdbc:postgresql://localhost:5432/datapilot

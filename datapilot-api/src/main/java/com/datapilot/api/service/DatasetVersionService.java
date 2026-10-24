@@ -1,6 +1,5 @@
 package com.datapilot.api.service;
 
-import com.datapilot.api.dto.DatasetVersionCreateRequest;
 import com.datapilot.api.dto.DatasetVersionResponse;
 import com.datapilot.api.entity.Dataset;
 import com.datapilot.api.entity.DatasetVersion;
@@ -10,25 +9,48 @@ import com.datapilot.api.exception.DatasetVersionNotFoundException;
 import com.datapilot.api.repository.DatasetRepository;
 import com.datapilot.api.repository.DatasetVersionRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class DatasetVersionService {
 
     private final DatasetRepository datasetRepository;
     private final DatasetVersionRepository datasetVersionRepository;
+    private final FileStorageService fileStorageService;
 
-    public DatasetVersionService(DatasetRepository datasetRepository, DatasetVersionRepository datasetVersionRepository) {
+    public DatasetVersionService(DatasetRepository datasetRepository, DatasetVersionRepository datasetVersionRepository, FileStorageService fileStorageService) {
         this.datasetRepository = datasetRepository;
         this.datasetVersionRepository = datasetVersionRepository;
+        this.fileStorageService = fileStorageService;
     }
 
-    public DatasetVersionResponse createVersion(UUID datasetId, DatasetVersionCreateRequest request){
+    public DatasetVersionResponse createVersion(UUID datasetId, MultipartFile file){
+
+        if (file == null || file.isEmpty()){
+            throw new IllegalArgumentException("Uploaded file must not be empty");
+        }
+
+        String originalFileName = file.getOriginalFilename();
+
+        if(originalFileName == null || originalFileName.isBlank()){
+            throw new IllegalArgumentException("File name is required");
+        }
+
+        String normalizedFileName = Path.of(originalFileName)
+                .getFileName()
+                .toString();
+
+        String lowercaseFileName = normalizedFileName.toLowerCase(Locale.ROOT);
+
+        if(!lowercaseFileName.endsWith(".csv") && !lowercaseFileName.endsWith(".json")){
+            throw new IllegalArgumentException("Only CSV and JSON files are supported");
+        }
 
         // Does the parent Dataset exist?
         Dataset dataset = datasetRepository.findById(datasetId)
@@ -44,16 +66,30 @@ public class DatasetVersionService {
                 .map(version -> version.getVersionNumber()+1)
                 .orElse(1);
 
-        DatasetVersion version = new DatasetVersion();
-        version.setDataset(dataset);
-        version.setVersionNumber(nextVersion);
-        version.setFileName(request.getFileName());
-        version.setStatus(DatasetVersionStatus.CREATED);
-        version.setCreatedAt(Instant.now());
+        String storageLocation = fileStorageService.store(datasetId, file);
 
-        DatasetVersion savedVersion = datasetVersionRepository.save(version);
+        try{
+            DatasetVersion version = new DatasetVersion();
+            version.setDataset(dataset);
+            version.setVersionNumber(nextVersion);
+            version.setFileName(normalizedFileName);
+            version.setStorageLocation(storageLocation);
+            version.setStatus(DatasetVersionStatus.CREATED);
+            version.setCreatedAt(Instant.now());
 
-        return toResponse(savedVersion);
+            DatasetVersion savedVersion = datasetVersionRepository.save(version);
+
+            return toResponse(savedVersion);
+        } catch (RuntimeException e) {
+            // Avoid leaving a file behind when database persistence fails.
+            try {
+                Files.deleteIfExists(Path.of(storageLocation));
+            } catch (IOException cleanupException) {
+                e.addSuppressed(cleanupException);
+            }
+            throw e;
+        }
+
     }
 
     public List<DatasetVersionResponse> getAllVersions(UUID datasetId) {

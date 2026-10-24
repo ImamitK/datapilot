@@ -1,11 +1,11 @@
 package com.datapilot.api.controller;
 
-import com.datapilot.api.dto.DatasetVersionCreateRequest;
 import com.datapilot.api.dto.DatasetVersionResponse;
 import com.datapilot.api.service.DatasetVersionService;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,12 +20,12 @@ public class DatasetVersionController {
         this.datasetVersionService = datasetVersionService;
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public DatasetVersionResponse createVersion(
             @PathVariable UUID datasetId,
-            @Valid @RequestBody DatasetVersionCreateRequest request){
-        return datasetVersionService.createVersion(datasetId, request);
+            @RequestParam("file")MultipartFile file){
+        return datasetVersionService.createVersion(datasetId, file);
     }
 
     @GetMapping

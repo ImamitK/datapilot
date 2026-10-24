@@ -113,15 +113,22 @@ paths:
     post:
       summary: Create a dataset version
       operationId: createDatasetVersion
-      description: Creates the next version number for an existing dataset.
+      description: >
+        Uploads a CSV or JSON file and creates the next version
+        for an existing dataset. Maximum file size is 10 MB.
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: '#/components/schemas/DatasetVersionCreateRequest'
-            example:
-              fileName: customers_2026_10_07.csv
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: CSV or JSON file to upload (maximum 10 MB)
       responses:
         '201':
           description: Dataset version created successfully
@@ -147,11 +154,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: Uploaded file exceeds the maximum allowed size
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server or file storage error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
     get:
       summary: List dataset versions
       operationId: getAllVersions
-      description: Returns versions ordered from newest to oldest. Returns an empty array when the dataset has no versions.
+      description: >
+        Returns versions ordered from newest to oldest.
+        Returns an empty array when the dataset has no versions.
       responses:
         '200':
           description: Dataset versions retrieved successfully

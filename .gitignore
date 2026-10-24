@@ -1,3 +1,15 @@
+# Local secrets and environment files
+.env
+.env.*
+!.env.example
+application-local.yml
+application-local.yaml
+application-local.properties
+secrets/
+*.pem
+*.key
+
+
 # Maven
 target/
 pom.xml.tag

@@ -1,6 +1,5 @@
 package com.datapilot.api.controller;
 
-import com.datapilot.api.dto.DatasetVersionCreateRequest;
 import com.datapilot.api.dto.DatasetVersionResponse;
 import com.datapilot.api.entity.DatasetVersionStatus;
 import com.datapilot.api.service.DatasetVersionService;
@@ -8,8 +7,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
 import java.util.List;
@@ -18,13 +19,14 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(DatasetVersionController.class)
 public class DatasetVersionControllerTest {
+
+
 
     @Autowired
     private MockMvc mockMvc;
@@ -55,19 +57,20 @@ public class DatasetVersionControllerTest {
 
         DatasetVersionResponse response = createResponse(datasetId, 1, "customer_v1.csv");
 
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "customers_v1.csv",
+                "text/csv",
+                "id,name\n1,Alice\n".getBytes()
+        );
+
         when(datasetVersionService
                 .createVersion(
                         eq(datasetId),  // Means the first argument must equal our test's datasetId.
-                        any(DatasetVersionCreateRequest.class)))  // Means the second argument can be any instance of DatasetVersionCreateRequest because we already have created the response so don't have to worry about request.
+                        any(MultipartFile.class)))  // Means the second argument can be any instance of DatasetVersionCreateRequest because we already have created the response so don't have to worry about request.
                 .thenReturn(response);  // Means Mockito returns the prepared response instead of executing the real service logic
 
-        mockMvc.perform(post("/api/v1/datasets/{datasetId}/versions", datasetId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {
-                            "fileName" : "customer_v1.csv"
-                        }
-                        """))
+        mockMvc.perform(multipart("/api/v1/datasets/{datasetId}/versions", datasetId).file(file))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.datasetId")
                         .value(datasetId.toString()))
@@ -118,11 +121,17 @@ public class DatasetVersionControllerTest {
     void shouldReturn400WhenFileNameIsBlank() throws Exception{
         UUID datasetId = UUID.randomUUID();
 
-        mockMvc.perform(post("/api/v1/datasets/{datasetId}/versions", datasetId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                            "fileName" : "  "
-                        """))
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "",
+                "text/csv",
+                "id,name\n".getBytes()
+        );
+
+        when(datasetVersionService.createVersion(eq(datasetId), any(MultipartFile.class)))
+                .thenThrow(new IllegalArgumentException("File name is required"));
+
+        mockMvc.perform(multipart("/api/v1/datasets/{datasetId}/versions", datasetId).file(file))
                 .andExpect(status().isBadRequest());
     }
 

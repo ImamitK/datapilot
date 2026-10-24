@@ -15,6 +15,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -31,6 +33,9 @@ public class DatasetVersionServiceTest {
 
     @Mock
     private DatasetRepository datasetRepository;
+
+    @Mock
+    private FileStorageService fileStorageService;
 
     @InjectMocks
     private DatasetVersionService datasetVersionService;
@@ -56,10 +61,16 @@ public class DatasetVersionServiceTest {
         when(datasetVersionRepository.findTopByDatasetIdOrderByVersionNumberDesc(datasetId))
                 .thenReturn(Optional.empty());
 
-        // Step 5: Create the API request: This is not a mock. It's a real object.
-        //         We're creating the request that a client might send:
-        DatasetVersionCreateRequest request = new DatasetVersionCreateRequest();
-        request.setFileName("customers_2026_10_07.csv");
+        // Step 5:
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "customers.csv"
+                ,"text/csv",
+                "id,name\n1,Alice\n".getBytes()
+        );
+
+        when(fileStorageService.store(eq(datasetId), any(MultipartFile.class)))
+                .thenReturn("test-uploads/customers.csv");
 
         // Step 6:
         // any(DatasetVersion.class)  ->  I don't care which DatasetVersion object is passed to save(). version1 , version2 or any other DatasetVersion
@@ -96,11 +107,11 @@ public class DatasetVersionServiceTest {
             4.  Then service calls save -> Mockito returns the same version object because of our thenAnswer().
             5.  Now the actual methods get called and it returns DatasetVersionResponse.
         */
-        DatasetVersionResponse response = datasetVersionService.createVersion(datasetId, request);
+        DatasetVersionResponse response = datasetVersionService.createVersion(datasetId, file);
 
         //
         assertEquals(1, response.getVersionNumber());
-        assertEquals("customers_2026_10_07.csv", response.getFileName());
+        assertEquals("customers.csv", response.getFileName());
         assertEquals(DatasetVersionStatus.CREATED, response.getStatus());
 
         // Step : We want to inspect the exact object that the service passed to the repository. Think of ArgumentCaptor as: A container that catches an argument passed to a mock.
@@ -116,7 +127,9 @@ public class DatasetVersionServiceTest {
 
         // Verify the saved object's properties
         assertEquals(1, savedVersion.getVersionNumber());
-        assertEquals( "customers_2026_10_07.csv", savedVersion.getFileName());
+        assertEquals( "customers.csv", savedVersion.getFileName());
+        assertEquals("test-uploads/customers.csv",
+                savedVersion.getStorageLocation());
         assertEquals(DatasetVersionStatus.CREATED, savedVersion.getStatus());
 
         /*Why both response assertions and ArgumentCaptor?
@@ -157,16 +170,24 @@ public class DatasetVersionServiceTest {
         when(datasetVersionRepository.findTopByDatasetIdOrderByVersionNumberDesc(datasetId))
                 .thenReturn(Optional.of(latestVersion));
 
-        DatasetVersionCreateRequest request = new DatasetVersionCreateRequest();
-        request.setFileName("customers_2026_10_10.csv");
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "customers.csv"
+                ,"text/csv",
+                "id,name\n1,Alice\n".getBytes()
+        );
+
+        when(fileStorageService.store(eq(datasetId), any(MultipartFile.class)))
+                .thenReturn("test-uploads/customers.csv");
+
         when(datasetVersionRepository.save(any(DatasetVersion.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         DatasetVersionResponse response = datasetVersionService
-                    .createVersion(datasetId, request);
+                    .createVersion(datasetId, file);
 
         assertEquals(2, response.getVersionNumber());
-        assertEquals("customers_2026_10_10.csv", response.getFileName());
+        assertEquals("customers.csv", response.getFileName());
 
         verify(datasetVersionRepository)
                 .save(any(DatasetVersion.class));
@@ -240,13 +261,17 @@ public class DatasetVersionServiceTest {
         when(datasetRepository.findById(datasetId))
                 .thenReturn(Optional.empty());
 
-        DatasetVersionCreateRequest request = new DatasetVersionCreateRequest();
-        request.setFileName("customers.csv");
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "customers.csv",
+                "text/csv",
+                "id,name\n1,Alice\n".getBytes()
+        );
 
         // Execute this service method and check whether it throws DatasetNotFoundException
         DatasetNotFoundException exception =
                 assertThrows(DatasetNotFoundException.class,
-                        () -> datasetVersionService.createVersion(datasetId, request));
+                        () -> datasetVersionService.createVersion(datasetId, file));
 
         assertTrue(exception.getMessage().contains(datasetId.toString()));
 
