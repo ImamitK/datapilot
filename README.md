@@ -44,58 +44,68 @@ The AI is built around the **data platform**, rather than being a standalone cha
 
 # Current Status
 
-### Day 2 — Dataset Management
+### 
 
 Implemented:
 
-* ✅ Dataset management REST APIs
-* ✅ CSV and JSON file upload using multipart requests
-* ✅ Local file storage organized by dataset
-* ✅ Dataset version metadata stored in PostgreSQL
-* ✅ API documentation using OpenAPI
+* ✅ Java 21 and Spring Boot REST API 
+* ✅ PostgreSQL persistence using Spring Data JPA / Hibernate
+* ✅ Dataset CRUD APIs and soft deletion
+* ✅ Request/response DTOs and request validation
+* ✅ Dataset name uniqueness and centralized exception handling
+* ✅ Dataset version creation and retrieval APIs
+* ✅ CSV and JSON file upload using multipart/form-data
+* ✅ Local file storage organized by dataset ID
+* ✅ Dataset version metadata persisted in PostgreSQL
+* ✅ OpenAPI contract for the implemented APIs
+* ✅ Service unit tests and controller/API tests
+* ✅ PostgreSQL integration tests
 
 ### In Progress / Planned
 
 * ⬜ Kafka event-driven processing
-* ⬜ Data profiling engine
-* ⬜ Data quality rules
-* ⬜ Object storage integration
-* ⬜ RAG ingestion pipeline
-* ⬜ Vector search with pgvector
-* ⬜ AI Data Assistant
-* ⬜ Tool-using Data Investigation Agent
-* ⬜ Authentication and RBAC
-* ⬜ Observability
-* ⬜ AWS deployment
+* ⬜ CSV and JSON content parsing and schema extraction
+* ⬜ Automatic row-count calculation and data profiling
+* ⬜ Data quality rules and validation reports
+* ⬜ Asynchronous ingestion and processing
+* ⬜ Kafka-based event-driven processing
+* ⬜ Cloud object storage integration
+* ⬜ RAG ingestion pipeline and vector search
+* ⬜ AI-powered data investigation
+* ⬜ Authentication and role-based access control
+* ⬜ Observability and cloud deployment
 
----
+--- Features listed as planned are not yet represented as completed capabilities.
 
 # Architecture
 
 ## Current Architecture
 
 ```text
+
 Client / Postman
        |
       HTTP
        |
        v
-+-------------------------+
-| DataPilot API           |
-| Java 21 / Spring Boot   |
-|                         |
-| Controller              |
-| Service                 |
-| Repository              |
-+------------+------------+
++---------------------------+
+| DataPilot API              |
+| Java 21 / Spring Boot      |
+|                            |
+| Controllers                |
+| Services                   |
+| Repositories               |
++------------+---------------+
              |
-          JPA / Hibernate
-             |
-             v
-+-------------------------+
-| PostgreSQL              |
-| datasets                |
-+-------------------------+
+        +----+----------------+
+        |                     |
+        v                     v
++----------------+   +-------------------+
+| PostgreSQL     |   | Local File Storage|
+| Datasets       |   | Uploaded CSV/JSON |
+| DatasetVersion |   | Files             |
++----------------+   +-------------------+
+
 ```
 
 ## Target Architecture
@@ -135,7 +145,8 @@ Architecture documentation is maintained under:
 
 ```text
 docs/
-├── architecture/
+├── api/
+└── architecture/
 └── decisions/
 ```
 
@@ -143,7 +154,7 @@ docs/
 
 # Technology Stack
 
-### Backend
+### Backend (Currently Used)
 
 * Java 21
 * Spring Boot
@@ -152,14 +163,14 @@ docs/
 * Hibernate
 * Maven
 
-### Data
+### Data (Planned)
 
 * PostgreSQL
 * pgvector
 * Object storage / S3
 * Kafka
 
-### AI
+### AI (Planned)
 
 * Python
 * FastAPI
@@ -178,12 +189,12 @@ docs/
 * Mockito
 * MockMvc
 * GitHub Actions
-* OpenTelemetry
-* Grafana
+* OpenTelemetry (Planned)
+* Grafana (Planned)
 
-### Cloud
+### Cloud (Planned)
 
-AWS is the initial target cloud platform for deployment.
+AWS is the initial target cloud platform for deployment. 
 
 Planned services include:
 
@@ -278,6 +289,40 @@ INACTIVE
 
 The database record is retained rather than physically removed.
 
+# Dataset Version API
+
+## Upload a Dataset Version
+
+`POST /api/v1/datasets/{datasetId}/versions`
+
+Content type: `multipart/form-data`
+
+Form field:
+
+- `file` — CSV or JSON file
+
+The API stores the uploaded file locally and persists its version metadata in PostgreSQL.
+
+Successful response: `201 Created`
+
+## List Dataset Versions
+
+`GET /api/v1/datasets/{datasetId}/versions`
+
+Returns the versions associated with the dataset.
+
+## Get a Specific Version
+
+Document the individual-version endpoint here if it is implemented.
+Use the exact path and response defined in `docs/api/openapi.yaml`.
+
+## Upload Constraints
+
+- Supported file extensions: `.csv` and `.json`
+- Maximum upload size: 10 MB
+- Uploaded files are stored locally during development.
+- File parsing, schema extraction, and data profiling are separate capabilities planned for subsequent milestones.
+
 ---
 
 # API Contract
@@ -306,14 +351,17 @@ DataPilot uses centralized REST exception handling.
 
 Current API semantics include:
 
-| Situation              |       HTTP Status |
-| ---------------------- | ----------------: |
-| Successful creation    |     `201 Created` |
-| Successful read        |          `200 OK` |
-| Successful soft delete |  `204 No Content` |
-| Invalid request        | `400 Bad Request` |
-| Dataset not found      |   `404 Not Found` |
-| Duplicate dataset      |    `409 Conflict` |
+| Situation                            |       HTTP Status               |       
+| ------------------------------------ | -------------------------------:|
+| Successful creation                  |            `201 Created`        |
+| Successful read                      |                 `200 OK`        |
+| Successful soft delete               |         `204 No Content`        |
+| Invalid request                      |        `400 Bad Request`        |
+| Dataset not found/doesn't exist      |          `404 Not Found`        |
+| Duplicate dataset                    |           `409 Conflict`        |
+| Invalid request or empty upload      |        `400 Bad Request`        |
+| Dataset version doesn't exist        |          `404 Not Found`        |
+| Upload exceeds configured limit      |  `413 Payload Too Large`        |
 
 Example duplicate response:
 
