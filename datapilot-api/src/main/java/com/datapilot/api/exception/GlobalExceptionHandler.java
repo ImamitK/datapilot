@@ -39,6 +39,19 @@ public class GlobalExceptionHandler{
                 ));
    }
 
+    @ExceptionHandler(DatasetVersionNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleDatasetVersionNotFound(
+            DatasetVersionNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(Map.of(
+                        "timestamp", Instant.now(),
+                        "status", 404,
+                        "error", "Not Found",
+                        "message", ex.getMessage()
+                ));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(
             IllegalArgumentException exception) {

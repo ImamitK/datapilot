@@ -1,9 +1,9 @@
 package com.datapilot.api.integration;
 
-import com.datapilot.api.entity.Dataset;
-import com.datapilot.api.entity.DatasetStatus;
-import com.datapilot.api.entity.SourceType;
+import com.datapilot.api.entity.*;
 import com.datapilot.api.repository.DatasetRepository;
+import com.datapilot.api.repository.DatasetVersionRepository;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +47,9 @@ public class DatasetPostgresIntegrationTest {
     @Autowired
     private DatasetRepository datasetRepository;
 
+    @Autowired
+    private DatasetVersionRepository datasetVersionRepository;
+
     @Test
     void shouldPersistAndReadDatasetFromPostgres() {
 
@@ -83,4 +86,51 @@ public class DatasetPostgresIntegrationTest {
         );
     }
 
+    @Test
+    @Transactional
+    void shouldPersistAndReadDatasetVersionFromPostgres() {
+        // Step 1: Create and persist the parent Dataset
+        Dataset dataset = new Dataset();
+        dataset.setName("customers-" + UUID.randomUUID());
+        dataset.setDescription("Customer master data");
+        dataset.setSourceType(SourceType.CSV);
+        dataset.setStatus(DatasetStatus.ACTIVE);
+
+        Instant now = Instant.now();
+        dataset.setCreatedAt(now);
+        dataset.setUpdatedAt(now);
+
+        Dataset savedDataset = datasetRepository.saveAndFlush(dataset);
+
+        // Step 2: Create a DatasetVersion referencing that Dataset
+        DatasetVersion version = new DatasetVersion();
+        version.setDataset(savedDataset);
+        version.setVersionNumber(1);
+        version.setFileName("customers.csv");
+        version.setStorageLocation("integration-test/customers.csv");
+        version.setStatus(DatasetVersionStatus.CREATED);
+        version.setCreatedAt(now);
+
+        DatasetVersion savedVersion = datasetVersionRepository.saveAndFlush(version);
+
+        // Step 3: Verify PostgreSQL generated the version ID
+        assertNotNull(savedVersion);
+
+        // Step 4: Retrieve the version through the real repository
+        DatasetVersion foundVersion = datasetVersionRepository
+                .findByDatasetIdAndVersionNumber(
+                        savedDataset.getId(),
+                        1)
+                .orElseThrow();
+
+        // Step 5: Verify the persisted data and relationship
+        assertEquals(1, foundVersion.getVersionNumber());
+        assertEquals("customers.csv", foundVersion.getFileName());
+        assertEquals(
+                DatasetVersionStatus.CREATED,
+                foundVersion.getStatus());
+        assertEquals(
+                savedDataset.getId(),
+                foundVersion.getDataset().getId());
+    }
 }
