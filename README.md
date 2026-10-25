@@ -48,26 +48,14 @@ The AI is built around the **data platform**, rather than being a standalone cha
 
 Implemented:
 
-* ✅ Java 21 + Spring Boot foundation
-* ✅ PostgreSQL persistence
-* ✅ Dataset CRUD APIs
-* ✅ Request/response DTOs
-* ✅ Request validation
-* ✅ Dataset name uniqueness
-* ✅ Global exception handling
-* ✅ `400 Bad Request` validation responses
-* ✅ `404 Not Found` handling
-* ✅ `409 Conflict` for duplicate datasets
-* ✅ Soft deletion (`ACTIVE → INACTIVE`)
-* ✅ OpenAPI API contract
-* ✅ Service unit tests
-* ✅ Controller/API tests
-* ✅ PostgreSQL integration test using Testcontainers
+* ✅ Dataset management REST APIs
+* ✅ CSV and JSON file upload using multipart requests
+* ✅ Local file storage organized by dataset
+* ✅ Dataset version metadata stored in PostgreSQL
+* ✅ API documentation using OpenAPI
 
 ### In Progress / Planned
 
-* ⬜ Dataset ingestion
-* ⬜ Dataset versions
 * ⬜ Kafka event-driven processing
 * ⬜ Data profiling engine
 * ⬜ Data quality rules
