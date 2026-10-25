@@ -479,25 +479,25 @@ Important technical decisions are documented using Architecture Decision Records
               │   │   └── openapi.yaml
               │   ├── architecture/
               │   └── decisions/
-       │
-       └── datapilot-api/
-           ├── pom.xml
-           ├── Dockerfile
-           ├── docker-compose.yml
-           ├── .gitignore
-           └── src/
-               ├── main/
-               │   ├── java/com/datapilot/api/
-               │   │   ├── controller/
-               │   │   ├── dto/
-               │   │   ├── entity/
-               │   │   ├── exception/
-               │   │   ├── repository/
-               │   │   └── service/
-               │   └── resources/
-               │       └── application.yml
-               └── test/
-                   └── java/com/datapilot/api/
+              │
+              └── datapilot-api/
+                  ├── pom.xml
+                  ├── Dockerfile
+                  ├── docker-compose.yml
+                  ├── .gitignore
+                  └── src/
+                      ├── main/
+                      │   ├── java/com/datapilot/api/
+                      │   │   ├── controller/
+                      │   │   ├── dto/
+                      │   │   ├── entity/
+                      │   │   ├── exception/
+                      │   │   ├── repository/
+                      │   │   └── service/
+                      │   └── resources/
+                      │       └── application.yml
+                      └── test/
+                          └── java/com/datapilot/api/
 ```
 
 This is a representative structure. Keep it synchronized with the actual repository as new modules and files are added.
