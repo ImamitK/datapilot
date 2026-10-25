@@ -4,11 +4,31 @@
 
 ### Enterprise Data Intelligence & RAG Platform
 
-DataPilot is a production-oriented data platform designed to help engineering and data teams **ingest, understand, validate, monitor, and investigate enterprise data** using modern data engineering and Generative AI techniques.
+DataPilot is an evolving enterprise data platform designed to ingest, manage, validate, and investigate data using reliable backend engineering and, in later milestones, Generative AI and retrieval-augmented generation (RAG).
 
-The project combines **Java/Spring backend engineering, event-driven data processing, data quality, RAG, vector search, and AI agents** into one end-to-end platform.
+The goal is to build a practical, production-oriented system that connects data ingestion, data quality, metadata, search, and evidence-backed AI investigation.
 
-> **Goal:** Build an enterprise-style platform that can move from raw data → data quality insights → evidence-backed AI investigation.
+Current milestone: Dataset management, versioned uploads, and PostgreSQL persistence.
+
+> **Project status:** The backend foundation and file-upload capabilities are implemented. Automated content processing, data profiling, RAG, and AI investigation remain planned capabilities.
+
+---
+
+## Table of Contents
+
+- [Why DataPilot?](#why-datapilot)
+- [Current Status](#current-status)
+- [Architecture](#architecture)
+- [Technology Stack](#technology-stack)
+- [Implemented APIs](#implemented-apis)
+- [Error Handling](#error-handling)
+- [Testing Strategy](#testing-strategy)
+- [Running Locally](#running-locally)
+- [Project Structure](#project-structure)
+- [Development Roadmap](#development-roadmap)
+- [Engineering Principles](#engineering-principles)
+- [Architecture Decisions](#architecture-decisions)
+- [Long-Term Vision](#long-term-vision)
 
 ---
 
@@ -17,28 +37,30 @@ The project combines **Java/Spring backend engineering, event-driven data proces
 Most AI portfolio projects demonstrate a simple:
 
 ```text
-Prompt → LLM → Answer
+       Prompt → LLM → Answer
 ```
 
 DataPilot takes a different approach:
 
 ```text
-Enterprise Data
-       ↓
-Ingestion
-       ↓
-Profiling & Data Quality
-       ↓
-Metadata + Documentation
-       ↓
-RAG / Vector Search
-       ↓
-AI Investigation Agent
-       ↓
-Evidence-backed Answer & Recommendation
+       Enterprise Data
+              ↓
+       Ingestion
+              ↓
+       Profiling & Data Quality
+              ↓
+       Metadata + Documentation
+              ↓
+       RAG / Vector Search
+              ↓
+       AI Investigation Agent
+              ↓
+       Evidence-backed Answer & Recommendation
 ```
 
-The AI is built around the **data platform**, rather than being a standalone chatbot.
+The diagram represents the long-term vision, not the current implementation.
+
+The objective is to build a platform where AI operates on reliable, structured data and supporting evidence rather than acting as a standalone chatbot.
 
 ---
 
@@ -51,8 +73,10 @@ Implemented:
 * ✅ Java 21 and Spring Boot REST API 
 * ✅ PostgreSQL persistence using Spring Data JPA / Hibernate
 * ✅ Dataset CRUD APIs and soft deletion
-* ✅ Request/response DTOs and request validation
-* ✅ Dataset name uniqueness and centralized exception handling
+* ✅ Requestand response DTOs
+* ✅ request validation
+* ✅ Dataset name uniqueness
+* ✅ Centralized exception handling
 * ✅ Dataset version creation and retrieval APIs
 * ✅ CSV and JSON file upload using multipart/form-data
 * ✅ Local file storage organized by dataset ID
@@ -64,7 +88,8 @@ Implemented:
 ### In Progress / Planned
 
 * ⬜ Kafka event-driven processing
-* ⬜ CSV and JSON content parsing and schema extraction
+* ⬜ CSV and JSON content parsing
+* ⬜ Schema and column detection
 * ⬜ Automatic row-count calculation and data profiling
 * ⬜ Data quality rules and validation reports
 * ⬜ Asynchronous ingestion and processing
@@ -75,7 +100,9 @@ Implemented:
 * ⬜ Authentication and role-based access control
 * ⬜ Observability and cloud deployment
 
---- Features listed as planned are not yet represented as completed capabilities.
+Only capabilities implemented and verified by the code and tests should be treated as complete.
+
+---
 
 # Architecture
 
@@ -83,134 +110,124 @@ Implemented:
 
 ```text
 
-Client / Postman
-       |
-      HTTP
-       |
-       v
-+---------------------------+
-| DataPilot API              |
-| Java 21 / Spring Boot      |
-|                            |
-| Controllers                |
-| Services                   |
-| Repositories               |
-+------------+---------------+
-             |
-        +----+----------------+
-        |                     |
-        v                     v
-+----------------+   +-------------------+
-| PostgreSQL     |   | Local File Storage|
-| Datasets       |   | Uploaded CSV/JSON |
-| DatasetVersion |   | Files             |
-+----------------+   +-------------------+
+                 Client / Postman
+                       |
+                      HTTP
+                       |
+                       v
+           +---------------------------+
+           | DataPilot API              |
+           | Java 21 / Spring Boot      |
+           |                            |
+           | Controllers                |
+           | Services                   |
+           | Repositories               |
+           +------------+---------------+
+                        |
+               +----+----------------+
+               |                     |
+               v                     v
+       +----------------+   +-------------------+
+       | PostgreSQL     |   | Local File Storage|
+       | Datasets       |   | Uploaded CSV/JSON |
+       | DatasetVersion |   | Files             |
+       +----------------+   +-------------------+
 
 ```
 
 ## Target Architecture
 
 ```text
-                       +------------------+
-                       |  React / Client  |
-                       +--------+---------+
-                                |
-                                v
-                    +----------------------+
-                    | API / Gateway        |
-                    | Java 21 / Spring     |
-                    +----------+-----------+
-                               |
-                    +----------+----------+
-                    |                     |
-                    v                     v
-             Dataset / Job         AI Service
-             Services              Python / FastAPI
-                    |                     |
-                    v                     v
-                 Kafka                 RAG / Agent
-                    |                     |
-          +---------+---------+      pgvector
-          |                   |          |
-          v                   v          v
-      Profiling           Data Quality   LLM
-          |                   |
-          +---------+---------+
-                    |
-                    v
-             PostgreSQL / S3
+                      API / Gateway
+                            |
+                 +----------+----------+
+                 |                     |
+                 v                     v
+           Dataset Services       AI Service
+                 |                     |
+                 v                     v
+           Ingestion Jobs          RAG Pipeline
+                 |                     |
+                 v                     v
+              Kafka                Vector Search
+                 |                     |
+                 v                     v
+           Data Profiling              LLM
+                 |
+                 v
+           Data Quality
+                 |
+                 v
+           Evidence & Insights
 ```
+This target architecture will evolve as the ingestion, processing, and AI capabilities are implemented.
 
-Architecture documentation is maintained under:
+### Architecture Documentation
 
-```text
-docs/
-├── api/
-└── architecture/
-└── decisions/
-```
+Architecture documentation and API contracts are maintained in the repository's `docs/` directory where present.
 
 ---
 
-# Technology Stack
+## Technology Stack
 
-### Backend (Currently Used)
+### Currently Used
 
-* Java 21
-* Spring Boot
-* Spring MVC
-* Spring Data JPA
-* Hibernate
-* Maven
+| Area | Technologies |
+|---|---|
+| Language | Java 21 |
+| Backend | Spring Boot, Spring MVC |
+| Persistence | Spring Data JPA, Hibernate |
+| Database | PostgreSQL |
+| Build | Maven |
+| Local environment | Docker, Docker Compose |
+| API documentation | OpenAPI |
+| Testing | JUnit 5, Mockito, Spring testing, Testcontainers where configured |
+| Version control | Git, GitHub |
 
-### Data (Planned)
+### Planned Technologies
 
-* PostgreSQL
-* pgvector
-* Object storage / S3
-* Kafka
+| Area | Candidate technologies |
+|---|---|
+| Event-driven processing | Apache Kafka |
+| Cloud storage | OCI Object Storage or AWS S3 |
+| Vector search | pgvector |
+| AI service | Python, FastAPI |
+| Retrieval and generation | Embeddings, RAG, LLMs |
+| AI tool integration | Tool calling and agent workflows |
+| Observability | OpenTelemetry, metrics and dashboards |
+| Cloud deployment | AWS or OCI, based on implementation needs |
 
-### AI (Planned)
-
-* Python
-* FastAPI
-* Embeddings
-* RAG
-* LLMs
-* Tool calling
-* AI agents
-
-### Engineering
-
-* Docker
-* Docker Compose
-* Testcontainers
-* JUnit 5
-* Mockito
-* MockMvc
-* GitHub Actions
-* OpenTelemetry (Planned)
-* Grafana (Planned)
-
-### Cloud (Planned)
-
-AWS is the initial target cloud platform for deployment. 
-
-Planned services include:
-
-```text
-S3
-RDS PostgreSQL
-ECS / Fargate
-```
+Planned technologies are not part of the implemented stack unless explicitly stated otherwise.
 
 Kafka deployment will be evaluated based on cost and operational complexity.
 
 ---
 
-# Dataset Management API
+## Implemented APIs
 
-## Create Dataset
+Base URL for local development:
+
+`http://localhost:8080`
+
+### Dataset Management
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `POST` | `/api/v1/datasets` | Create a dataset |
+| `GET` | `/api/v1/datasets` | List datasets |
+| `GET` | `/api/v1/datasets/{id}` | Retrieve a dataset |
+| `DELETE` | `/api/v1/datasets/{id}` | Soft-delete a dataset |
+
+### Dataset Versions
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `POST` | `/api/v1/datasets/{datasetId}/versions` | Upload a file and create a version |
+| `GET` | `/api/v1/datasets/{datasetId}/versions` | List versions for a dataset |
+
+If an individual-version endpoint is implemented, document its exact path from the OpenAPI contract here.
+
+### Create Dataset
 
 ```http
 POST /api/v1/datasets
@@ -227,125 +244,63 @@ Request:
 }
 ```
 
-Response:
+Expected success status: `201 Created`.
 
-```http
-201 Created
-```
-
-```json
-{
-  "id": "02df195c-f0fb-41ad-9268-bc014049de96",
-  "name": "customer-data",
-  "description": "Customer master dataset",
-  "sourceType": "CSV",
-  "status": "ACTIVE",
-  "createdAt": "2026-10-04T10:30:00Z",
-  "updatedAt": "2026-10-04T10:30:00Z"
-}
-```
-
-## Get All Datasets
-
-```http
-GET /api/v1/datasets
-```
-
-Returns active datasets.
-
-## Get Dataset
-
-```http
-GET /api/v1/datasets/{id}
-```
-
-Example:
-
-```http
-GET /api/v1/datasets/02df195c-f0fb-41ad-9268-bc014049de96
-```
-
-## Delete Dataset
-
-```http
-DELETE /api/v1/datasets/{id}
-```
-
-Response:
-
-```http
-204 No Content
-```
-
-DataPilot currently uses **soft deletion**:
-
-```text
-ACTIVE
-   ↓
-DELETE
-   ↓
-INACTIVE
-```
+Use the actual response DTO to determine the complete response schema.
 
 The database record is retained rather than physically removed.
 
-# Dataset Version API
+### Upload a Dataset Version
 
-## Upload a Dataset Version
+Request:
 
-`POST /api/v1/datasets/{datasetId}/versions`
-
-Content type: `multipart/form-data`
-
-Form field:
-
-- `file` — CSV or JSON file
-
-The API stores the uploaded file locally and persists its version metadata in PostgreSQL.
-
-Successful response: `201 Created`
-
-## List Dataset Versions
-
-`GET /api/v1/datasets/{datasetId}/versions`
-
-Returns the versions associated with the dataset.
-
-## Get a Specific Version
-
-Document the individual-version endpoint here if it is implemented.
-Use the exact path and response defined in `docs/api/openapi.yaml`.
-
-## Upload Constraints
-
-- Supported file extensions: `.csv` and `.json`
-- Maximum upload size: 10 MB
-- Uploaded files are stored locally during development.
-- File parsing, schema extraction, and data profiling are separate capabilities planned for subsequent milestones.
-
----
-
-# API Contract
-
-The machine-readable API contract is maintained using OpenAPI:
-
-```text
-docs/api/openapi.yaml
+```http
+POST /api/v1/datasets/{datasetId}/versions
+Content-Type: multipart/form-data
 ```
 
-The API contract defines:
+Multipart form field:
 
-* endpoints
-* request schemas
-* response schemas
-* validation requirements
-* HTTP status codes
-* error responses
-* examples
+| Field | Type | Description |
+|---|---|---|
+| `file` | File | CSV or JSON file to upload |
+
+Expected success status: `201 Created`.
+
+The upload operation stores the file locally and persists its version metadata in PostgreSQL.
+
+Current upload constraints:
+
+- Supported file extensions: `.csv` and `.json`
+- Maximum configured upload size: 10 MB
+- Storage: local filesystem
+- Version metadata: PostgreSQL
+
+**Important:** File upload does not yet mean that DataPilot has parsed, profiled, or validated the contents of the file.
+
+### List Dataset Versions
+
+Request:
+
+```http
+GET /api/v1/datasets/{datasetId}/versions
+```
+
+Returns the versions associated with the specified dataset.
+
+Refer to the OpenAPI contract and response DTOs for the exact response structure.
+
+### API Contract
+
+The API contract is maintained in:
+
+`docs/api/openapi.yaml`
+
+The contract should remain synchronized with the implemented controllers, DTOs, validation rules, and HTTP responses.
 
 ---
 
-# Error Handling
+## Error Handling
 
 DataPilot uses centralized REST exception handling.
 
@@ -363,21 +318,11 @@ Current API semantics include:
 | Dataset version doesn't exist        |          `404 Not Found`        |
 | Upload exceeds configured limit      |  `413 Payload Too Large`        |
 
-Example duplicate response:
+These mappings must be verified against the current exception handler and automated tests before being considered complete.
 
-```json
-{
-  "timestamp": "2026-10-04T10:50:00Z",
-  "status": 409,
-  "error": "Conflict",
-  "message": "Dataset already exists: customer-data",
-  "path": "/api/v1/datasets"
-}
-```
+Error responses should provide a consistent structure with the status, message, and request path where supported by the response DTO.
 
----
-
-# Testing Strategy
+## Testing Strategy
 
 DataPilot uses multiple levels of automated testing.
 
@@ -398,11 +343,14 @@ JUnit 5 + Mockito are used to test service/business logic in isolation.
 Examples:
 
 ```text
-Create dataset
-Get dataset
-Get nonexistent dataset
-Delete dataset
-Duplicate dataset
+Test business logic in isolation, including:
+
+- Dataset creation and retrieval
+- Duplicate dataset handling
+- Missing dataset behavior
+- Dataset version creation
+- Invalid upload validation
+- File storage behavior
 ```
 
 ## Controller / API Tests
@@ -412,31 +360,51 @@ Spring MockMvc verifies the HTTP API contract.
 Examples:
 
 ```text
-POST → 201
-GET → 200
-GET missing → 404
-Invalid request → 400
-DELETE → 204
-Duplicate → 409
+Verify HTTP behavior, including:
+
+- Successful dataset creation
+- Dataset retrieval
+- Missing-resource responses
+- Invalid request validation
+- Dataset deletion
+- Version upload
+- Version listing
+- Unsupported file types
+- Empty uploads
+- Upload-size limits
 ```
 
-## Integration Tests
+### PostgreSQL Integration Tests
 
-Testcontainers is used to run PostgreSQL for integration testing.
+Integration tests verify persistence behavior against PostgreSQL where configured.
 
-The integration test verifies:
+The intended persistence path is:
 
 ```text
-Spring Boot
-    ↓
-JPA / Hibernate
-    ↓
-JDBC
-    ↓
-PostgreSQL
+       Spring Boot
+            |
+            v
+       JPA / Hibernate
+            |
+            v
+           JDBC
+            |
+            v
+       PostgreSQL
+```
+### Run the Tests
+
+From the `datapilot-api` directory:
+
+```powershell
+       .\mvnw.cmd clean test
 ```
 
-This ensures that the persistence layer works against a real PostgreSQL database rather than a mock.
+If the Maven wrapper is not present, use the installed Maven executable:
+
+```powershell
+       mvn clean test
+```
 
 ---
 
@@ -449,15 +417,15 @@ DataPilot is intentionally being built using production-oriented engineering pra
 API contracts are defined before implementation.
 
 ```text
-OpenAPI Contract
-      ↓
-DTO
-      ↓
-Controller
-      ↓
-Service
-      ↓
-Repository
+       OpenAPI Contract
+             ↓
+            DTO
+             ↓
+        Controller
+             ↓
+          Service
+             ↓
+         Repository
 ```
 
 ### Separation of concerns
@@ -465,13 +433,13 @@ Repository
 The application separates:
 
 ```text
-Controller
-    ↓
-Service
-    ↓
-Repository
-    ↓
-Database
+       Controller
+           ↓
+       Service
+           ↓
+       Repository
+           ↓
+       Database
 ```
 
 Persistence entities are not exposed directly as the public API contract.
@@ -495,267 +463,273 @@ Business logic, HTTP behavior, and persistence are tested at different levels.
 Important technical decisions are documented using Architecture Decision Records:
 
 ```text
-docs/architecture/
-docs/decisions/
+       docs/architecture/
+       docs/decisions/
 ```
 
 ---
 
-# Project Structure
+## Project Structure
 
 ```text
-datapilot/
-│
-├── README.md
-├── docs/
-│   ├── api/
-│   │   └── openapi.yaml
-│   ├── architecture/
-│   └── decisions/
-│
-└── datapilot-api/
-    ├── pom.xml
-    ├── Dockerfile
-    ├── docker-compose.yml
-    │
-    └── src/
-        ├── main/
-        │   ├── java/
-        │   │   └── com/datapilot/api/
-        │   │       ├── controller/
-        │   │       ├── dto/
-        │   │       ├── entity/
-        │   │       ├── exception/
-        │   │       ├── repository/
-        │   │       └── service/
-        │   │
-        │   └── resources/
-        │       └── application.yml
-        │
-        └── test/
-            └── java/
-                └── com/datapilot/api/
+              datapilot/
+              ├── README.md
+              ├── docs/
+              │   ├── api/
+              │   │   └── openapi.yaml
+              │   ├── architecture/
+              │   └── decisions/
+       │
+       └── datapilot-api/
+           ├── pom.xml
+           ├── Dockerfile
+           ├── docker-compose.yml
+           ├── .gitignore
+           └── src/
+               ├── main/
+               │   ├── java/com/datapilot/api/
+               │   │   ├── controller/
+               │   │   ├── dto/
+               │   │   ├── entity/
+               │   │   ├── exception/
+               │   │   ├── repository/
+               │   │   └── service/
+               │   └── resources/
+               │       └── application.yml
+               └── test/
+                   └── java/com/datapilot/api/
 ```
+
+This is a representative structure. Keep it synchronized with the actual repository as new modules and files are added.
 
 ---
 
-# Running Locally
+## Running Locally
 
 ### Prerequisites
 
-```text
-Java 21
-Docker Desktop
-Git
-```
+- Java 21
+- Docker Desktop
+- Git
+- Maven, or the repository's Maven wrapper
 
-### Start the application
-
-From `datapilot-api`:
-
-```bash
-./mvnw spring-boot:run
-```
-
-Windows:
+### 1. Clone the Repository
 
 ```powershell
-.\mvnw.cmd spring-boot:run
+git clone https://github.com/ImamitK/datapilot.git
+cd datapilot
 ```
 
-### API
+### 2. Start the Development Environment
+
+Navigate to the API module:
+
+```powershell
+cd datapilot-api
+```
+
+Start the services defined in the Compose configuration:
+
+```powershell
+docker compose up -d
+```
+
+Check the running containers:
+
+```powershell
+docker compose ps
+```
+
+If you prefer running the API directly from your IDE, start only the database service defined in `docker-compose.yml`, then run the Spring Boot application from IntelliJ IDEA or Maven.
+
+### 3. Run the Tests
+
+```powershell
+.\mvnw.cmd clean test
+```
+
+### 4. Access the API
 
 ```text
 http://localhost:8080
 ```
 
-### Health Check
+Use the endpoints listed in the API section or the OpenAPI contract.
 
-```http
-GET /api/v1/health
-```
+### Configuration Notes
 
-Expected response:
+- PostgreSQL connection settings are configured through the application's Spring configuration.
+- File storage uses the `datapilot.storage.directory` property.
+- The default development storage directory is `./datapilot-uploads` unless overridden.
+- The upload-size limit is configured through Spring multipart settings.
+- Uploaded files and local environment secrets should not be committed to Git.
 
-```json
-{
-  "status": "UP",
-  "service": "datapilot-api"
-}
-```
+Use the actual health-check endpoint implemented in the application if one is available.
 
 ---
 
-# Development Roadmap
+## Development Roadmap
 
-## Phase 1 — Foundation
+### Phase 1 — Backend Foundation
 
-* Java 21
-* Spring Boot
-* PostgreSQL
-* REST APIs
-* API contracts
-* Testing foundation
+- Java and Spring Boot setup
+- PostgreSQL integration
+- Dataset management APIs
+- API contracts and DTOs
+- Validation and exception handling
+- Initial automated testing
 
-## Phase 2 — Data Ingestion
+**Status:** Implemented foundation.
 
-* CSV / JSON ingestion
-* Dataset versions
-* Object storage
-* ingestion jobs
+### Phase 2 — Versioned File Ingestion
 
-## Phase 3 — Event-Driven Processing
+- Dataset version creation and retrieval
+- CSV and JSON uploads
+- Local file storage
+- File metadata persistence
+- Upload validation and error handling
 
-* Kafka
-* asynchronous processing
-* retries
-* dead-letter queues
-* idempotency
-* job tracking
+**Status:** Implemented; verify tests and API behavior as changes are made.
 
-## Phase 4 — Data Intelligence
+### Phase 3 — Data Understanding
 
-* schema detection
-* profiling
-* null analysis
-* duplicate detection
-* statistical summaries
-* data quality rules
+- CSV and JSON parsing
+- Schema and column detection
+- Row-count calculation
+- Data type inference
+- Basic data profiling
+- Malformed-file handling
+- Processing status management
 
-## Phase 5 — RAG
+**Status:** Planned next milestone.
 
-```text
-Documents
-   ↓
-Parsing
-   ↓
-Chunking
-   ↓
-Embeddings
-   ↓
-pgvector
-   ↓
-Retrieval
-   ↓
-LLM
-```
+### Phase 4 — Data Quality and Processing
 
-The assistant will provide citations and evidence rather than unsupported answers.
+- Data quality rules
+- Null and duplicate analysis
+- Profiling reports
+- Background ingestion jobs
+- Retry and failure handling
+- Event-driven processing where justified
 
-## Phase 6 — AI Data Investigation Agent
+### Phase 5 — Retrieval-Augmented Generation
 
-The agent will be able to use controlled tools such as:
+- Dataset documentation and metadata retrieval
+- Document and metadata indexing
+- Embeddings and vector search
+- Retrieval evaluation
+- Evidence-backed responses
+- RAG pipeline integration
 
-```text
-get_dataset_schema()
-get_column_profile()
-get_data_quality_issues()
-search_documentation()
-get_lineage()
-execute_readonly_sql()
-```
+### Phase 6 — AI-Assisted Investigation
 
-The SQL tool will be protected by:
+Potential investigation capabilities:
 
-* read-only database access
-* SQL validation
-* query timeout
-* row limits
-* audit logging
+- Retrieve dataset schema
+- Inspect column profiles
+- Find data quality issues
+- Search dataset documentation
+- Explain changes between dataset versions
+- Recommend investigation steps
 
-## Phase 7 — Production Engineering
+Any SQL execution or tool-based operations will require appropriate access controls, validation, resource limits, and auditing.
 
-* JWT authentication
-* RBAC
-* observability
-* distributed tracing
-* resilience
-* security hardening
-* CI/CD
-* AWS deployment
+### Phase 7 — Production Readiness
+
+- Authentication and authorization
+- Role-based access control
+- Observability and tracing
+- Resilience and operational safeguards
+- CI/CD
+- Cloud deployment
+- Security hardening
 
 ---
 
-# Architecture Decisions
+## Engineering Principles
 
-Important architectural decisions are documented rather than hidden inside implementation details.
+### API-First Design
 
-Examples:
+Keep the OpenAPI contract aligned with the implementation.
 
-```text
-ADR-001 — Initial Architecture
-ADR-002 — Java 21
-ADR-003 — Kafka
-ADR-004 — pgvector
-ADR-005 — AI Agent Security
-```
+### Separation of Concerns
 
-See:
+Controllers handle HTTP interactions, services contain business logic, repositories handle persistence, and DTOs define API contracts.
 
-```text
-docs/architecture/
-docs/decisions/
-```
+### Data Integrity
+
+Use application validation together with appropriate database constraints.
+
+### Testability
+
+Test business logic, API behavior, and persistence at the appropriate levels.
+
+### Explicit Failure Handling
+
+Return meaningful HTTP status codes and consistent error responses.
+
+### Incremental Architecture
+
+Introduce Kafka, vector databases, AI services, and distributed processing when a demonstrated requirement justifies them, rather than adding infrastructure prematurely.
 
 ---
 
-# Long-Term Vision
+## Architecture Decisions
 
-DataPilot is intended to evolve into an **enterprise data investigation platform** where engineers can ask questions such as:
+Important architectural decisions should be recorded in Architecture Decision Records (ADRs).
+
+The repository's `docs/decisions/` and `docs/architecture/` directories should contain the decisions that actually exist.
+
+Potential future decisions include:
+
+- File storage abstraction
+- Asynchronous ingestion
+- Cloud object storage
+- Search and vector indexing
+- AI tool execution and security
+
+Do not list proposed ADRs as completed documents until they have been created.
+
+---
+
+## Long-Term Vision
+
+The long-term goal is to help engineers investigate enterprise data using evidence.
+
+For example, a future version of DataPilot could answer:
 
 > Why did the quality score of customer data decrease this week?
 
-and receive an evidence-backed investigation:
+An investigation might identify:
 
-```text
-Quality score: 91% → 74%
+- An increase in missing values in a critical column
+- A schema change between two dataset versions
+- The ingestion job associated with the change
+- The downstream data-quality impact
+- Suggested remediation steps
 
-Primary issue:
-customer_email null rate increased
-from 2.1% to 17.8%.
+These are illustrative future capabilities, not features currently claimed as implemented.
 
-Detected change:
-Ingestion job #1842
-
-Likely cause:
-customer_email column missing
-from the source file.
-
-Impact:
-CRM export pipeline affected.
-
-Recommended action:
-Restore customer_email in the upstream
-source pipeline and reprocess the affected
-dataset version.
-```
-
-The long-term objective is to combine **data engineering + distributed systems + RAG + agentic AI** into a system that can investigate real enterprise data rather than simply generate text.
+The guiding principle is to combine reliable data engineering with retrieval and AI-assisted investigation so that answers are grounded in available data and evidence.
 
 ---
 
-# Author
+## Author
 
 **Amit Kaushik**
 
 Java / Data Platform Engineer
 
-Focused on:
+Areas of focus:
 
-```text
-Java
-Spring Boot
-Data Platforms
-Distributed Systems
-Kafka
-Cloud
-Generative AI
-RAG
-AI Agents
-```
+- Java and Spring Boot
+- Backend and API engineering
+- Data platforms
+- Distributed systems
+- Cloud engineering
+- Generative AI and RAG
 
 ---
 
-## Project Status
+DataPilot is an actively developed proof-of-work project. Each milestone aims to add a working capability supported by appropriate tests, documentation, and engineering decisions.
 
-This project is being developed incrementally, with each milestone adding a production-oriented capability and corresponding tests, documentation, and architectural decisions.
