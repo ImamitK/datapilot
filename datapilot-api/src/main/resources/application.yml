@@ -2,6 +2,10 @@ datapilot:
   storage:
     directory: ${DATAPILOT_STORAGE_DIR:./datapilot-uploads}
 
+  kafka:
+    topics:
+      dataset-version-created: datapilot.dataset-version-created
+
 spring:
   application:
     name: datapilot-api
@@ -22,6 +26,24 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+
+  kafka:
+     #bootstrap-servers ->Connects to Kafka on localhost:9092 by default && KAFKA_BOOTSTRAP_SERVERS -> Allows a different broker address through an environment variable
+     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+     producer:
+       key-serializer: org.apache.kafka.common.serialization.StringSerializer #StringSerializer -> Serializes message keys as strings
+       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer #JsonSerializer -> Serializes Java event objects as JSON
+
+     consumer:
+       group-id: datapilot-processing #group-id -> Identifies our processing consumer group
+       auto-offset-reset: earliest #auto-offset-reset: earliest -> Starts at the earliest available message when the group has no committed offset
+       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+       properties:
+         "[spring.json.trusted.packages]": "com.datapilot.api.event" #trusted.packages -> Restricts JSON event deserialization to our event package
+         "[spring.json.value.default.type]": "com.datapilot.api.events.DatasetVersionCreated"
 
 server:
   error:

@@ -5,8 +5,10 @@ import com.datapilot.api.dto.DatasetVersionResponse;
 import com.datapilot.api.entity.Dataset;
 import com.datapilot.api.entity.DatasetVersion;
 import com.datapilot.api.entity.DatasetVersionStatus;
+import com.datapilot.api.events.DatasetVersionCreated;
 import com.datapilot.api.exception.DatasetNotFoundException;
 import com.datapilot.api.exception.DatasetVersionNotFoundException;
+import com.datapilot.api.messaging.DatasetVersionEventPublisher;
 import com.datapilot.api.repository.DatasetRepository;
 import com.datapilot.api.repository.DatasetVersionRepository;
 import org.junit.jupiter.api.Test;
@@ -36,6 +38,9 @@ public class DatasetVersionServiceTest {
 
     @Mock
     private FileStorageService fileStorageService;
+
+    @Mock
+    private DatasetVersionEventPublisher datasetVersionEventPublisher;
 
     @InjectMocks
     private DatasetVersionService datasetVersionService;
@@ -131,6 +136,9 @@ public class DatasetVersionServiceTest {
         assertEquals("test-uploads/customers.csv",
                 savedVersion.getStorageLocation());
         assertEquals(DatasetVersionStatus.CREATED, savedVersion.getStatus());
+
+        verify(datasetVersionEventPublisher)
+                .publish(any(DatasetVersionCreated.class));
 
         /*Why both response assertions and ArgumentCaptor?
             We are checking two different things.
@@ -305,6 +313,9 @@ public class DatasetVersionServiceTest {
          */
         verify(datasetVersionRepository, never())
                 .save(any(DatasetVersion.class));
+
+        verify(datasetVersionEventPublisher, never())
+                .publish(any(DatasetVersionCreated.class));
     }
 }
 

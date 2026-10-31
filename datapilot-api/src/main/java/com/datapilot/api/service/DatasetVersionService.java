@@ -4,8 +4,10 @@ import com.datapilot.api.dto.DatasetVersionResponse;
 import com.datapilot.api.entity.Dataset;
 import com.datapilot.api.entity.DatasetVersion;
 import com.datapilot.api.entity.DatasetVersionStatus;
+import com.datapilot.api.events.DatasetVersionCreated;
 import com.datapilot.api.exception.DatasetNotFoundException;
 import com.datapilot.api.exception.DatasetVersionNotFoundException;
+import com.datapilot.api.messaging.DatasetVersionEventPublisher;
 import com.datapilot.api.repository.DatasetRepository;
 import com.datapilot.api.repository.DatasetVersionRepository;
 import org.springframework.stereotype.Service;
@@ -23,11 +25,17 @@ public class DatasetVersionService {
     private final DatasetRepository datasetRepository;
     private final DatasetVersionRepository datasetVersionRepository;
     private final FileStorageService fileStorageService;
+    private final DatasetVersionEventPublisher datasetVersionEventPublisher;
 
-    public DatasetVersionService(DatasetRepository datasetRepository, DatasetVersionRepository datasetVersionRepository, FileStorageService fileStorageService) {
+    public DatasetVersionService(
+            DatasetRepository datasetRepository,
+            DatasetVersionRepository datasetVersionRepository,
+            FileStorageService fileStorageService,
+            DatasetVersionEventPublisher datasetVersionEventPublisher) {
         this.datasetRepository = datasetRepository;
         this.datasetVersionRepository = datasetVersionRepository;
         this.fileStorageService = fileStorageService;
+        this.datasetVersionEventPublisher = datasetVersionEventPublisher;
     }
 
     public DatasetVersionResponse createVersion(UUID datasetId, MultipartFile file){
@@ -68,6 +76,7 @@ public class DatasetVersionService {
 
         String storageLocation = fileStorageService.store(datasetId, file);
 
+        DatasetVersion savedVersion;
         try{
             DatasetVersion version = new DatasetVersion();
             version.setDataset(dataset);
@@ -77,9 +86,8 @@ public class DatasetVersionService {
             version.setStatus(DatasetVersionStatus.CREATED);
             version.setCreatedAt(Instant.now());
 
-            DatasetVersion savedVersion = datasetVersionRepository.save(version);
+            savedVersion = datasetVersionRepository.save(version);
 
-            return toResponse(savedVersion);
         } catch (RuntimeException e) {
             // Avoid leaving a file behind when database persistence fails.
             try {
@@ -90,6 +98,11 @@ public class DatasetVersionService {
             throw e;
         }
 
+        // Publish only after the version has been persisted.
+        DatasetVersionCreated event = DatasetVersionCreated.from(savedVersion);
+        datasetVersionEventPublisher.publish(event);
+
+        return toResponse(savedVersion);
     }
 
     public List<DatasetVersionResponse> getAllVersions(UUID datasetId) {
